@@ -1,0 +1,23 @@
+# .github/workflows/cd.yml
+name: CD - Docker Compose Build
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 🐳 Build Docker Compose
+        run: |
+          docker compose -f docker-compose.yml config
+          docker compose -f docker-compose.yml build
+
+      - name: ✅ CD successful
+        run: echo "CD terminé avec succès – Docker Compose build OK !"
