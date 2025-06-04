@@ -1,23 +1,76 @@
-# .github/workflows/cd.yml
-name: CD - Docker Compose Build
+# .github/workflows/cd-promote-dev.yml
+name: CD – Promote dev → master
 
 on:
   push:
     branches:
       - dev
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 🐳 Build Docker Compose
+      - name: Generate dummy .env for Docker Compose
         run: |
-          docker compose -f docker-compose.yml config
-          docker compose -f docker-compose.yml build
+          cat <<EOF > .env
+          POSTGRES_USER=ci_user
+          POSTGRES_PASSWORD=ci_pass
+          POSTGRES_DB=ci_db
+          # autres vars si besoin…
+          EOF
 
-      - name: ✅ CD successful
-        run: echo "CD terminé avec succès – Docker Compose build OK !"
+      - name: Check Docker Compose version
+        run: docker compose version
+
+      - name: Validate Compose file
+        run: docker compose config --quiet
+
+      - name: Build all services
+        run: docker compose build --parallel
+
+  promote:
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v3
+        with:
+          ref: dev
+
+      - name: Create (or reuse) and merge PR dev → master
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const head = 'dev', base = 'master';
+            const { data: prs } = await github.rest.pulls.list({
+              owner, repo,
+              head: `${owner}:${head}`,
+              base,
+              state: 'open'
+            });
+            let pr = prs[0];
+            if (!pr) {
+              const { data } = await github.rest.pulls.create({
+                owner, repo,
+                head, base,
+                title: 'Automated promotion: dev → master',
+                body: 'PR générée après un build Compose réussi sur dev.'
+              });
+              pr = data;
+            }
+            await github.rest.pulls.merge({
+              owner, repo,
+              pull_number: pr.number,
+              merge_method: 'merge'
+            });
