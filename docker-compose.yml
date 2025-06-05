@@ -10,6 +10,7 @@ volumes:
 services:
   rabbitmq:
     image: rabbitmq:4-management
+    restart: unless-stopped
     ports:
       - "15672:15672"
     env_file: .env
@@ -17,16 +18,11 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   grafana:
     image: grafana/grafana:latest
     env_file: .env
-    restart: always
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
@@ -38,25 +34,21 @@ services:
     networks: [backend]
     depends_on:
       prometheus:
-        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:latest
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks: [backend]
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider http://localhost:9090/-/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   db:
     image: postgres:latest
     env_file: .env
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -64,17 +56,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks: [backend]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    ports:
+      - "5432:5432"
 
   web:
     build:
       context: ./server
       dockerfile: Dockerfile
     env_file: .env
+    restart: unless-stopped
     command: >
       sh -c "
         python manage.py migrate &&
@@ -85,20 +75,14 @@ services:
       - "8000:8000"
     depends_on:
       db:
-        condition: service_healthy
       rabbitmq:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:8000 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   celery:
     build:
       context: ./server
       dockerfile: Dockerfile
     env_file: .env
+    restart: unless-stopped
     command: celery -A server_config worker --loglevel=info
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydb
@@ -113,11 +97,6 @@ services:
     ports:
       - "5173:5173"
     networks: [backend]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5173 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   nginx:
     build:
@@ -130,6 +109,4 @@ services:
     networks: [backend]
     depends_on:
       frontend:
-        condition: service_healthy
       web:
-        condition: service_healthy

@@ -22,21 +22,32 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
+<<<<<<< HEAD
       - name: ⚙️ Set up Docker
         uses: docker/setup-buildx-action@v3
 
+=======
+>>>>>>> 5c86572 (Mise à jour)
       # Build client
       - name: 🐳 Build client Docker image
         id: client_build
         continue-on-error: true
         run: |
+<<<<<<< HEAD
           docker build -f client/Dockerfile -t client-check client/ > client_build.log 2>&1
           echo "exit_code=$?" >> $GITHUB_OUTPUT
+=======
+          set +e
+          docker build -f client/Dockerfile -t client-check client/ > client_build.log 2>&1
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+>>>>>>> 5c86572 (Mise à jour)
 
       # Build server
       - name: 🐳 Build server Docker image
         id: server_build
         continue-on-error: true
+<<<<<<< HEAD
         run: |
           docker build -f server/Dockerfile -t server-check server/ > server_build.log 2>&1
           echo "exit_code=$?" >> $GITHUB_OUTPUT
@@ -74,6 +85,17 @@ jobs:
       # Create issue if any build failed
       - name: 🚨 Create issue on build/test failure
         if: ${{ steps.client_build.outputs.exit_code != '0' || steps.server_build.outputs.exit_code != '0' || steps.proxy_build.outputs.exit_code != '0' }}
+=======
+        run: |
+          set +e
+          docker build -f server/Dockerfile -t server-check server/ > server_build.log 2>&1
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+      # Create issue if any build failed
+      - name: 🚨 Create issue on build/test failure
+        if: ${{ steps.client_build.outputs.exit_code != '0' || steps.server_build.outputs.exit_code != '0' }}
+>>>>>>> 5c86572 (Mise à jour)
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -81,23 +103,35 @@ jobs:
             const fs = require('fs');
             const prNumber = context.payload.pull_request.number;
             const { owner, repo } = context.repo;
+<<<<<<< HEAD
 
             const clientLog = fs.readFileSync('client_build.log', 'utf8');
             const serverLog = fs.readFileSync('server_build.log', 'utf8');
             const proxyLog = fs.readFileSync('proxy_build.log', 'utf8');
             const frontendTest = fs.readFileSync('frontend_test.log', 'utf8');
             const backendTest = fs.readFileSync('backend_test.log', 'utf8');
+=======
+            const clientExit = ${{ steps.client_build.outputs.exit_code }};
+            const serverExit = ${{ steps.server_build.outputs.exit_code }};
+            const clientLog = fs.readFileSync('client_build.log', 'utf8');
+            const serverLog = fs.readFileSync('server_build.log', 'utf8');
+>>>>>>> 5c86572 (Mise à jour)
 
             const body = `
             ## 🚨 CI Failed on PR #${prNumber}
 
             ### 🔧 Client Build Log
             \`\`\`
+<<<<<<< HEAD
             ${clientLog.slice(0, 1000)}
+=======
+            ${clientLog}
+>>>>>>> 5c86572 (Mise à jour)
             \`\`\`
 
             ### 🔧 Server Build Log
             \`\`\`
+<<<<<<< HEAD
             ${serverLog.slice(0, 1000)}
             \`\`\`
 
@@ -114,6 +148,9 @@ jobs:
             ### ✅ Backend Test Output
             \`\`\`
             ${backendTest.slice(0, 1000)}
+=======
+            ${serverLog}
+>>>>>>> 5c86572 (Mise à jour)
             \`\`\`
             `;
 
