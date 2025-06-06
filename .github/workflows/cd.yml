@@ -49,7 +49,7 @@ jobs:
       - name: Create (or reuse) and merge PR dev → master
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # ✅ Remplacement ici
           script: |
             const { owner, repo } = context.repo;
             const head = 'dev', base = 'master';
