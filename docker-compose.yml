@@ -33,7 +33,7 @@ services:
       - grafana_data:/var/lib/grafana
     networks: [backend]
     depends_on:
-      prometheus:
+      - prometheus
 
   prometheus:
     image: prom/prometheus:latest
@@ -74,8 +74,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-      rabbitmq:
+      - db
+      - rabbitmq
 
   celery:
     build:
@@ -108,5 +108,5 @@ services:
       - "443:443"
     networks: [backend]
     depends_on:
-      frontend:
-      web:
+      - frontend
+      - web
