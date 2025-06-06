@@ -1,8 +1,8 @@
-FROM node:alpine
+FROM node:latest
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json ./
 
 RUN yarn install
 
@@ -10,4 +10,4 @@ COPY . .
 
 RUN yarn build
 
-CMD ["yarn", "dev", "--host"]
+CMD ["yarn", "preview", "--host"]

@@ -1,6 +1,5 @@
 # .github/workflows/cd-promote-dev.yml
-name: CD – Promote dev → master
-
+name: CD – Promote dev → main
 on:
   push:
     branches:
@@ -46,13 +45,13 @@ jobs:
         with:
           ref: dev
 
-      - name: Create (or reuse) and merge PR dev → master
+      - name: Create (or reuse) and merge PR dev → main
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # ✅ Remplacement ici
           script: |
             const { owner, repo } = context.repo;
-            const head = 'dev', base = 'master';
+            const head = 'dev', base = 'main';
             const { data: prs } = await github.rest.pulls.list({
               owner, repo,
               head: `${owner}:${head}`,
@@ -64,7 +63,7 @@ jobs:
               const { data } = await github.rest.pulls.create({
                 owner, repo,
                 head, base,
-                title: 'Automated promotion: dev → master',
+                title: 'Automated promotion: dev → main',
                 body: 'PR générée après un build Compose réussi sur dev.'
               });
               pr = data;

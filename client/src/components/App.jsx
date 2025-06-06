@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { api } from "../hooks/api.js"
 
 function App() {
   const [professors, setProfessors] = useState([])
@@ -7,16 +7,16 @@ function App() {
   const [comment, setComment] = useState('')
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/professors/')
+    api.get('api/professors/')
+      .then(response => response.json())
       .then(response => setProfessors(response.data))
       .catch(error => console.error(error))
   }, [])
 
   const handleVote = () => {
-    axios.post('http://localhost:8000/api/votes/', {
+    api.post('api/votes/', {
       professor: selectedProfessor,
       comment: comment,
-      ip_address: '127.0.0.1' // remplace plus tard par une vraie IP côté backend si besoin
     })
     .then(() => alert('Vote enregistré !'))
     .catch(err => console.error(err))
