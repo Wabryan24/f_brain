@@ -1,13 +1,21 @@
-FROM node:latest
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json ./
+# Copier les fichiers de dépendances
+COPY package.json yarn.lock ./
 
-RUN yarn install
+# Installer les dépendances
+RUN yarn install --frozen-lockfile
 
+# Copier le code source
 COPY . .
 
+# Build pour la production
 RUN yarn build
 
-CMD ["yarn", "preview", "--host"]
+# Exposer le port
+EXPOSE 4173
+
+# Lancer en mode preview
+CMD ["yarn", "preview", "--host", "0.0.0.0", "--port", "4173"]
