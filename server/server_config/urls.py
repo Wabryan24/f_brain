@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django_prometheus import exports
 
 
 def home(request):
@@ -10,5 +11,6 @@ def home(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),  # Toutes les routes API (professors, votes, etc.)
-    path('', home),  # Page d'accueil
+    path('home/', home),  # Page d'accueil
+    path("metrics/", exports.ExportToDjangoView, name="prometheus-django-metrics"),
 ]
